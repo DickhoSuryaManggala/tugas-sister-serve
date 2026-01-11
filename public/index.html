@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Info Harga Terdistribusi</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <div id="error-message" style="display:none; background-color: #ffdddd; color: red; padding: 10px; margin-bottom: 10px; border: 1px solid red; border-radius: 4px;"></div>
+        
+        <header>
+            <h1>Sistem Info Harga (Terdistribusi)</h1>
+            <div id="user-info">
+                <form onsubmit="event.preventDefault(); setUser();">
+                    <label for="username">Nama Node/Server:</label>
+                    <input type="text" id="username" placeholder="Contoh: Server_Jakarta" required>
+                    <button type="submit">Masuk (Set Node)</button>
+                </form>
+            </div>
+            <div id="current-user" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Node Aktif: <strong id="user-display"></strong></span>
+                    <button onclick="logout()" style="background:#e74c3c; padding: 5px 10px; font-size: 0.8em;">Ganti Node</button>
+                </div>
+            </div>
+        </header>
+
+        <main id="main-app" style="display:none;">
+            <!-- Input Section -->
+            <section class="send-section">
+                <h2>Update Data Harga</h2>
+                
+                <!-- Simulation Presets -->
+                <div style="margin-bottom: 15px; padding: 10px; background: #eef2f7; border-radius: 4px; border-left: 4px solid #3498db;">
+                    <strong>Skenario Simulasi:</strong>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <button onclick="setScenario('gold')" style="background: #f1c40f; color: #333; font-size: 0.9em; padding: 5px 10px;">Kasus 1: Harga Emas (Cepat)</button>
+                        <button onclick="setScenario('shipping')" style="background: #95a5a6; color: white; font-size: 0.9em; padding: 5px 10px;">Kasus 2: Ongkir (Lambat)</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="item-name" placeholder="Nama Barang (misal: Emas, Saham GOTO)">
+                    <input type="number" id="item-price" placeholder="Harga (IDR)">
+                </div>
+                
+                <div class="consistency-options">
+                    <p>Pilih Metode Konsistensi:</p>
+                    <label class="radio-label">
+                        <input type="radio" name="consistency" value="strong" id="radio-strong" checked>
+                        <strong>Update Langsung (Strong Consistency)</strong>
+                        <br><small>Cocok untuk: Harga Saham, Emas. Data harus real-time.</small>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="consistency" value="eventual" id="radio-eventual">
+                        <strong>Update Bertahap (Eventual Consistency)</strong>
+                        <br><small>Cocok untuk: Ongkir, Katalog Barang. Data boleh telat update.</small>
+                    </label>
+                </div>
+
+                <!-- Replication Settings -->
+                <div id="replication-settings" style="margin-bottom: 15px; display: none;">
+                    <label>Interval Replikasi Otomatis (detik):</label>
+                    <input type="number" id="sync-interval" value="30" min="5" style="width: 60px; padding: 5px;">
+                    <button onclick="updateSyncInterval()" style="padding: 5px 10px; font-size: 0.8em; background: #2ecc71;">Set Interval</button>
+                </div>
+
+                <button onclick="submitData()" class="btn-primary">Update Data</button>
+            </section>
+
+            <!-- Local Pending Section (For Eventual Consistency) -->
+            <section id="pending-section" class="log-section" style="border-color: #f39c12; background: #fffdf6; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="color: #d35400;">Data Lokal (Pending Replikasi)</h3>
+                    <div>
+                        <span id="timer-display" style="font-family: monospace; font-weight: bold; margin-right: 10px;"></span>
+                        <button onclick="forceSync()" style="background: #e67e22;">Sync Sekarang</button>
+                    </div>
+                </div>
+                <p><small>Data ini belum ada di server lain. Menunggu jadwal replikasi...</small></p>
+                <ul id="pending-list">
+                    <!-- Pending items go here -->
+                </ul>
+            </section>
+
+            <!-- Global Log Section -->
+            <section class="log-section">
+                <h2>Data di Cloud (Global)</h2>
+                <p>Status Koneksi: <span id="sync-status" style="color:green; font-weight:bold;">Terhubung</span></p>
+                
+                <table id="log-table">
+                    <thead>
+                        <tr>
+                            <th>Waktu (Server)</th>
+                            <th>Node Asal</th>
+                            <th>Barang</th>
+                            <th>Harga</th>
+                            <th>Tipe Update</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-body">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
